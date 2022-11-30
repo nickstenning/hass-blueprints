@@ -1,0 +1,75 @@
+blueprint:
+  name: Notification to close a window
+  description: Notification to close windows if it is cold outside
+  domain: automation
+
+  input:
+    contact_sensor:
+      name: Contact Sensor
+      description: The window or door sensor that triggers the automation.
+      selector:
+        entity:
+          domain:
+          - binary_sensor
+          - input_boolean
+          multiple: false
+    timer:
+      name: Timer
+      description: >
+        How many minutes the window/door should be open before sending
+        a notification.
+      default: 15
+      selector:
+        number:
+          min: 1.0
+          step: 1.0
+          max: 120.0
+          mode: slider
+    temperature:
+      name: Temperature
+      description: >
+        The outside temperature below which the notification should be
+        sent.
+      default: 20
+      selector:
+        number:
+          min: 0.0
+          step: 1.0
+          max: 25.0
+          mode: slider
+    weather_sensor:
+      name: Weather sensor
+      description: >
+        The weather entity to use to determine the outside temperature.
+      selector:
+        entity:
+          domain:
+          - weather
+    actions:
+      name: Actions
+      description: Actions (e.g. pushing a notification, TTS announcement, ...)
+      selector:
+        action:
+
+trigger:
+- platform: state
+  entity_id: !input contact_sensor
+  from: 'off'
+  to: 'on'
+  for:
+    hours: 0
+    minutes: !input timer
+    seconds: 0
+
+condition:
+- condition: state
+  entity_id: !input contact_sensor
+  state: 'on'
+- condition: numeric_state
+  entity_id: !input weather_sensor
+  attribute: temperature
+  below: !input temperature
+
+action: !input actions
+
+mode: single
